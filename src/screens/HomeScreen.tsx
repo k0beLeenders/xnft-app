@@ -2,6 +2,7 @@ import { Text, FlatList } from "react-native";
 import tw from "twrnc";
 
 import { Screen } from "../components/Screen";
+import { LoveShackStake } from "../components/LoveShackStake";
 
 export function HomeScreen() {
   const features = [
@@ -18,14 +19,15 @@ export function HomeScreen() {
 
   return (
     <Screen>
-      <Text style={tw`mb-4`}>
+      <LoveShackStake children={null}></LoveShackStake>
+      {/* <Text style={tw`mb-4`}>
         You'll find several examples of how to build xNFTs using react-native:
       </Text>
       <FlatList
         data={features}
         keyExtractor={(item) => item}
         renderItem={({ item }) => <Text>- {item}</Text>}
-      />
+      /> */}
     </Screen>
   );
 }
