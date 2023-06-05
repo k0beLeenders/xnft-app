@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -147,7 +147,7 @@ const forSlide: StackCardStyleInterpolator = ({
           outputRange: [0, 1],
           extrapolate: "clamp",
         })
-      : 0
+      : 0,
   );
 
   return {
@@ -164,7 +164,7 @@ const forSlide: StackCardStyleInterpolator = ({
               ],
               extrapolate: "clamp",
             }),
-            inverted
+            inverted,
           ),
         },
       ],

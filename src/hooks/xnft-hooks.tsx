@@ -1,5 +1,8 @@
+import { AnchorProvider, Provider } from '@coral-xyz/anchor';
+import { Event, XnftMetadata } from "@coral-xyz/common-public";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { useEffect, useState } from "react";
+import { XnftWallet } from "../types";
 
 declare global {
   interface Window {
@@ -24,9 +27,8 @@ export function usePublicKey(): PublicKey | undefined {
   return publicKey;
 }
 
-export function usePublicKeys(): { [key: string]: PublicKey } | undefined {
+export function usePublicKeys(): { [key: string]: PublicKey }|undefined {
   const didLaunch = useDidLaunch();
-
   const [publicKeys, setPublicKeys] = useState();
   useEffect(() => {
     if (didLaunch) {
@@ -40,7 +42,7 @@ export function usePublicKeys(): { [key: string]: PublicKey } | undefined {
 }
 
 /** @deprecated use blockchain-specific connections instead */
-export function useConnection(): Connection | undefined {
+export function useConnection(): Connection|undefined {
   const didLaunch = useDidLaunch();
   const [connection, setConnection] = useState();
   useEffect(() => {
@@ -54,7 +56,7 @@ export function useConnection(): Connection | undefined {
   return connection;
 }
 
-export function useSolanaConnection(): Connection | undefined {
+export function useSolanaConnection(): Connection|undefined {
   const didLaunch = useDidLaunch();
   const [connection, setConnection] = useState();
   useEffect(() => {
@@ -68,7 +70,7 @@ export function useSolanaConnection(): Connection | undefined {
   return connection;
 }
 
-export function useEthereumConnection(): Connection | undefined {
+export function useEthereumConnection(): Connection|undefined {
   const didLaunch = useDidLaunch();
   const [connection, setConnection] = useState();
   useEffect(() => {
@@ -84,17 +86,14 @@ export function useEthereumConnection(): Connection | undefined {
 
 // Returns true if the `window.xnft` object is ready to be used.
 export function useDidLaunch() {
-  const [didConnect, setDidConnect] = useState(false);
+  const [didConnect, setDidConnect] = useState(!!window.xnft?.connection);
   useEffect(() => {
     window.addEventListener("load", () => {
-      console.log("didConnect");
       window.xnft.on("connect", () => {
         setDidConnect(true);
-        console.log({ setDidConnect: true });
       });
       window.xnft.on("disconnect", () => {
         setDidConnect(false);
-        console.log({ setDidConnect: false });
       });
     });
   }, []);
@@ -103,20 +102,20 @@ export function useDidLaunch() {
 
 export const useReady = useDidLaunch;
 
-// export function useMetadata(): XnftMetadata | undefined {
-//   const didLaunch = useDidLaunch();
-//   const [metadata, setMetadata] = useState();
+export function useMetadata(): XnftMetadata|undefined {
+  const didLaunch = useDidLaunch() 
+  const [metadata, setMetadata] = useState();
 
-//   useEffect(() => {
-//     if (didLaunch) {
-//       setMetadata(window.xnft.metadata);
-//       window.xnft.addListener("metadata", (event: Event) => {
-//         setMetadata(event.data.metadata);
-//       });
-//     }
-//   }, [didLaunch, setMetadata]);
-//   return metadata;
-// }
+  useEffect(() => {
+    if(didLaunch) {
+      setMetadata(window.xnft.metadata);
+      window.xnft.addListener("metadata", (event: Event) => {
+        setMetadata(event.data.metadata);
+      });
+    }
+  }, [didLaunch, setMetadata]);
+  return metadata;
+}
 
 export function useDimensions(debounceMs = 0) {
   const [dimensions, setDimensions] = useState({
@@ -157,4 +156,23 @@ export function useDimensions(debounceMs = 0) {
   }, []);
 
   return dimensions;
+}
+
+export function useSolanaProvider(): Provider|undefined {
+  const connection = useSolanaConnection();
+  const [provider, setProvider] = useState<Provider>();
+
+  useEffect(() => {
+    if (connection) {
+      setProvider(
+        new AnchorProvider(
+          connection, 
+          new XnftWallet(window.xnft.solana), 
+          AnchorProvider.defaultOptions()
+        )
+      );
+    }
+  }, [connection, setProvider]);
+
+  return provider;
 }
