@@ -1,3 +1,4 @@
+import React from "react";
 import { registerRootComponent } from "expo";
 import { RecoilRoot } from "recoil";
 import { ActivityIndicator, View } from "react-native";
@@ -8,7 +9,8 @@ import { useFonts, Inter_900Black } from "@expo-google-fonts/dev";
 
 import { ExamplesScreens } from "./screens/ExamplesScreen";
 import { HomeScreen } from "./screens/HomeScreen";
-import { TokenListNavigator } from "./screens/TokenNavigator";
+import { TokenListNavigator } from "./screens/TokenScreen";
+import { IncubatorScreen } from "./screens/IncubatorScreen";
 
 const Tab = createBottomTabNavigator();
 
@@ -24,7 +26,7 @@ function TabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarLabel: "Home",
+          tabBarLabel: "Loveshack",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" color={color} size={size} />
           ),
@@ -32,10 +34,10 @@ function TabNavigator() {
       />
       <Tab.Screen
         name="List"
-        component={TokenListNavigator}
+        component={IncubatorScreen}
         options={{
           headerShown: false,
-          tabBarLabel: "Tokens",
+          tabBarLabel: "Incubator",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="bank" color={color} size={size} />
           ),
