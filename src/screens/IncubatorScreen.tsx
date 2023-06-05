@@ -1,11 +1,24 @@
-import { Text, FlatList } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  ActivityIndicator,
+  Animated,
+} from "react-native";
 import tw from "twrnc";
+import {
+  createStackNavigator,
+  StackCardStyleInterpolator,
+} from "@react-navigation/stack";
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 
 import { Screen } from "../components/Screen";
-import { LoveShackStake } from "../components/LoveShackStake";
-import React from "react";
+import { TokenRow } from "../components/TokenRow";
+import { VendingMachineLanding } from "../components/VendingMachine/VendingMachineLanding";
 
-export function HomeScreen() {
+export function IncubatorScreen() {
   const features = [
     "tailwind",
     "recoil",
@@ -20,7 +33,7 @@ export function HomeScreen() {
 
   return (
     <Screen>
-      <LoveShackStake children={null}></LoveShackStake>
+      <VendingMachineLanding children={null}></VendingMachineLanding>
       {/* <Text style={tw`mb-4`}>
         You'll find several examples of how to build xNFTs using react-native:
       </Text>

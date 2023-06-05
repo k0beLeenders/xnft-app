@@ -1,76 +1,74 @@
 import { Connection, PublicKey, TokenAmount } from "@solana/web3.js";
 import { LOVE_SHACK_IDL } from "../idls/loveshackIdl";
-import { usePublicKeys, useSolanaConnection } from "./xnft-hooks";
 import { Buffer } from "buffer";
-import {
-  Provider,
-  Program,
-  Wallet,
-  AnchorProvider,
-} from "@project-serum/anchor";
 import { DINO_MINT, EGG_MINT, LS_PROGRAM_ID } from "../consts";
 import { useEffect, useState } from "react";
+import { useConnection } from "./useConnection";
+import { useWallet } from "./useWallet";
+import { atom, useRecoilState } from "recoil";
+import { Program } from "@coral-xyz/anchor";
+
+const stakingAcctInfoAtom = atom<any>({
+  key: "stakingAcctInfoAtom",
+  default: undefined,
+});
 
 export function useLoveshack() {
-  const solanaPublicKey: PublicKey | undefined = new PublicKey(
-    window.xnft.publicKeys?.solana ?? PublicKey.default.toString()
-  ); // replace with hook eventually
-  const connection: Connection | undefined = window.xnft.solana?.connection; // replace with hook eventually
+  const wallet = useWallet();
+  const connection = useConnection();
   const [holdingAcct, setHoldingAcct] = useState<PublicKey>();
   const [authAcct, setAuthAcct] = useState<PublicKey>();
   const [stakingAcct, setStakingAcct] = useState<PublicKey>();
-  const [stakingAcctInfo, setStakingAcctInfo] = useState<any>();
+  const [stakingAcctInfo, setStakingAcctInfo] =
+    useRecoilState(stakingAcctInfoAtom);
   const [lsProgram, setLsProgram] = useState<Program>();
   const [poolAmount, setPoolAmount] = useState<TokenAmount>();
 
   useEffect(() => {
-    if (solanaPublicKey && connection) {
-      const hackyWallet = {
-        publicKey: solanaPublicKey,
-      } as Wallet;
-
-      // console.log({ connection });
-
-      // const provider = new AnchorProvider(connection, hackyWallet, {});
-      // setLsProgram(new Program(LOVE_SHACK_IDL, LS_PROGRAM_ID, provider));
+    if (wallet.provider && connection) {
+      setLsProgram(new Program(LOVE_SHACK_IDL, LS_PROGRAM_ID, wallet.provider));
     }
-  }, [solanaPublicKey, connection]);
+  }, [wallet.provider, connection, setLsProgram]);
 
-  // useEffect(() => {
-  //   if (lsProgram && (!holdingAcct || !authAcct)) {
-  //     setHoldingAcct(
-  //       PublicKey.findProgramAddressSync(
-  //         [Buffer.from("holding"), DINO_MINT.toBuffer()],
-  //         lsProgram.programId
-  //       )[0]
-  //     );
+  useEffect(() => {
+    if (lsProgram && (!holdingAcct || !authAcct)) {
+      setHoldingAcct(
+        PublicKey.findProgramAddressSync(
+          [Buffer.from("holding"), DINO_MINT.toBuffer()],
+          lsProgram.programId
+        )[0]
+      );
 
-  //     setAuthAcct(
-  //       PublicKey.findProgramAddressSync(
-  //         [Buffer.from("minting"), EGG_MINT.toBuffer()],
-  //         lsProgram.programId
-  //       )[0]
-  //     );
-  //   }
-  // }, [lsProgram]);
+      setAuthAcct(
+        PublicKey.findProgramAddressSync(
+          [Buffer.from("minting"), EGG_MINT.toBuffer()],
+          lsProgram.programId
+        )[0]
+      );
+    }
+  }, [lsProgram, holdingAcct, authAcct, setHoldingAcct, setAuthAcct]);
 
-  // useEffect(() => {
-  //   if (lsProgram && solanaPublicKey) {
-  //     const _stakeAcct = PublicKey.findProgramAddressSync(
-  //       [solanaPublicKey.toBuffer(), EGG_MINT.toBuffer(), DINO_MINT.toBuffer()],
-  //       LS_PROGRAM_ID
-  //     )[0];
-  //     setStakingAcct(_stakeAcct);
+  useEffect(() => {
+    if (lsProgram && wallet.publicKey) {
+      const _stakeAcct = PublicKey.findProgramAddressSync(
+        [
+          wallet.publicKey.toBuffer(),
+          EGG_MINT.toBuffer(),
+          DINO_MINT.toBuffer(),
+        ],
+        LS_PROGRAM_ID
+      )[0];
+      setStakingAcct(_stakeAcct);
 
-  //     getStakingAcctInfo(_stakeAcct, lsProgram);
-  //   }
-  // }, [lsProgram, solanaPublicKey]);
+      getStakingAcctInfo(_stakeAcct, lsProgram);
+    }
+  }, [lsProgram, wallet.publicKey, setStakingAcct]);
 
-  // useEffect(() => {
-  //   if (holdingAcct && connection) {
-  //     getPoolBalance(holdingAcct, connection);
-  //   }
-  // }, [holdingAcct]);
+  useEffect(() => {
+    if (holdingAcct && connection) {
+      getPoolBalance(holdingAcct, connection);
+    }
+  }, [holdingAcct, connection]);
 
   const getPoolBalance = async (
     _holdingAcct: PublicKey,
@@ -87,7 +85,7 @@ export function useLoveshack() {
   ) => {
     setStakingAcctInfo(
       await _lsProgram.account?.stakeAccountV2
-        .fetch(_stakingAcct)
+        .fetch(_stakingAcct, "confirmed")
         .catch((error) => undefined)
     );
   };
@@ -97,6 +95,7 @@ export function useLoveshack() {
     authAcct,
     stakingAcct,
     stakingAcctInfo,
+    getStakingAcctInfo,
     lsProgram,
     poolAmount,
   };

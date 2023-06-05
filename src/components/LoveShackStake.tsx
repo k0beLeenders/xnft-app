@@ -1,10 +1,18 @@
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, Text, View, Image, Modal } from "react-native";
 import { Bar as ProgressBar } from "react-native-progress";
-import { useLoveshack } from "../hooks/useLoveshack";
-import { usePublicKeys, useSolanaConnection } from "../hooks/xnft-hooks";
-import { useTokenBalances } from "../hooks/useTokenBalances";
+import { usePublicKeys } from "../hooks/xnft-hooks";
 import { useDinoStakingCard } from "../hooks/useDinoStakingCard";
 import * as utils from "../utils";
+import PrimaryButton from "./PrimaryButton";
+import { useState } from "react";
+import { LoveShackModal } from "./LoveShackModal";
+import { useTokenAccounts } from "../hooks/useTokenAccounts";
+import { DINO_MINT } from "../consts";
+import { useWallet } from "../hooks/useWallet";
+import { useLoveshack } from "../hooks/useLoveshack";
+import { TransactionInstruction } from "@solana/web3.js";
+import { useConnection } from "../hooks/useConnection";
+import React from "react";
 
 type Props = {
   // title: string;
@@ -13,11 +21,176 @@ type Props = {
 
 export function LoveShackStake({ children }: Props) {
   const keys = usePublicKeys();
-  const conn = useSolanaConnection();
+  const { publicKey } = useWallet();
+  const connection = useConnection();
+  const { tokenAccounts, getTokenAccounts } = useTokenAccounts();
+  const {
+    stakingAcctInfo,
+    stakingAcct,
+    holdingAcct,
+    lsProgram,
+    getStakingAcctInfo,
+  } = useLoveshack();
   const lsStaking = useDinoStakingCard();
+  const [isStakingModalVisible, setIsStakingModalVisible] =
+    useState<boolean>(false);
+  const [isStake, setIsStake] = useState<boolean>(true);
+
+  const stakeDino = async (amount: number) => {
+    if (
+      connection &&
+      tokenAccounts &&
+      publicKey &&
+      lsProgram &&
+      stakingAcct &&
+      holdingAcct
+    ) {
+      const accounts = tokenAccounts[DINO_MINT.toString()];
+      let instructions: TransactionInstruction[] = [];
+
+      if (accounts.length > 1) {
+        // handle that shit
+      }
+
+      if (!stakingAcctInfo) {
+        utils.createStakingAccountInstruction(
+          instructions,
+          lsProgram,
+          publicKey,
+          stakingAcct
+        );
+      }
+
+      utils.createStakeDinoInstruction(
+        instructions,
+        lsProgram,
+        publicKey,
+        accounts[0].pubkey,
+        stakingAcct,
+        holdingAcct,
+        amount,
+        6
+      );
+
+      const transaction = await utils.generateTransaction(
+        connection,
+        publicKey,
+        instructions
+      );
+
+      let tx = undefined;
+
+      try {
+        tx = await utils.solanaSignAndConfirmTransaction(transaction);
+        if (!tx) {
+          throw Error();
+        }
+      } catch (error) {
+        return;
+        // handle error
+      }
+      const latestBlockHash = await connection.getLatestBlockhash();
+
+      await connection.confirmTransaction(
+        {
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          signature: tx,
+        },
+        "confirmed"
+      );
+
+      getStakingAcctInfo(stakingAcct, lsProgram);
+      getTokenAccounts(publicKey, connection);
+
+      // utils.createStakeDinoInstruction()
+    }
+  };
+
+  const unStakeDino = async (amount: number) => {
+    if (
+      connection &&
+      tokenAccounts &&
+      publicKey &&
+      lsProgram &&
+      stakingAcct &&
+      holdingAcct
+    ) {
+      const accounts = tokenAccounts[DINO_MINT.toString()];
+      let instructions: TransactionInstruction[] = [];
+
+      if (accounts.length > 1) {
+        // handle that shit
+      }
+
+      if (!stakingAcctInfo) {
+        // throw error
+      }
+
+      utils.getStakeDinoInstruction(
+        instructions,
+        lsProgram,
+        publicKey,
+        accounts[0].pubkey,
+        stakingAcct,
+        holdingAcct,
+        amount,
+        6
+      );
+
+      const transaction = await utils.generateTransaction(
+        connection,
+        publicKey,
+        instructions
+      );
+
+      let tx = undefined;
+
+      try {
+        tx = await utils.solanaSignAndConfirmTransaction(transaction);
+        if (!tx) {
+          throw Error();
+        }
+      } catch (error) {
+        return;
+        // handle error
+      }
+      const latestBlockHash = await connection.getLatestBlockhash();
+
+      await connection.confirmTransaction(
+        {
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          signature: tx,
+        },
+        "confirmed"
+      );
+
+      getStakingAcctInfo(stakingAcct, lsProgram);
+      getTokenAccounts(publicKey, connection);
+
+      // utils.createStakeDinoInstruction()
+    }
+  };
 
   return (
     <View style={styles.container}>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isStakingModalVisible}
+      >
+        <LoveShackModal
+          stakedBalance={lsStaking.stakedMintABalance}
+          walletBalance={lsStaking.unstakedMintABalance}
+          children={null}
+          closeModal={() => setIsStakingModalVisible(!isStakingModalVisible)}
+          isStake={isStake}
+          handleStake={(amount: number) => stakeDino(amount)}
+          handleUnstake={(amount: number) => unStakeDino(amount)}
+        ></LoveShackModal>
+      </Modal>
+
       <View style={styles.heading}>
         <Image
           style={styles.logo}
@@ -44,9 +217,7 @@ export function LoveShackStake({ children }: Props) {
           <Text style={styles.typography}>click here</Text>
         </View>
         <View style={styles.descriptionRow}>
-          <Text style={styles.typography}>
-            Estimated DINOEGG earned per month:
-          </Text>
+          <Text style={styles.typography}>Estimated DINOEGG per month:</Text>
           <Text style={styles.typography}>{lsStaking.estimatedMintBEarn}</Text>
         </View>
         <View style={styles.descriptionRow}>
@@ -72,12 +243,25 @@ export function LoveShackStake({ children }: Props) {
           <Text style={styles.typography}>Pool size:</Text>
           <Text style={styles.typography}>{lsStaking.mintAPoolSize} DINO</Text>
         </View>
-        <View>
-          {/* <PrimaryButton
-            title={"Testing"}
-            onPress={() => {}}
-            children={null}
-          ></PrimaryButton> */}
+      </View>
+      <View style={styles.buttonSection}>
+        <View style={styles.buttonSectionItem}>
+          <PrimaryButton
+            title={"Stake"}
+            onPress={() => {
+              setIsStake(true);
+              setIsStakingModalVisible(true);
+            }}
+          />
+        </View>
+        <View style={styles.buttonSectionItem}>
+          <PrimaryButton
+            title={"Unstake"}
+            onPress={() => {
+              setIsStake(false);
+              setIsStakingModalVisible(true);
+            }}
+          />
         </View>
       </View>
     </View>
@@ -135,7 +319,16 @@ const styles = StyleSheet.create({
   progressBar: {
     marginVertical: "8px",
   },
-  example: {
-    marginTop: 8,
+  buttonSection: {
+    marginVertical: 20,
+    display: "flex",
+    flex: 2,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+  },
+  buttonSectionItem: {
+    maxWidth: "47%",
+    width: "100%",
   },
 });

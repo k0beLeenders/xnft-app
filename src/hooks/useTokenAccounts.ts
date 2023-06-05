@@ -6,6 +6,8 @@ import {
 } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 import { DINO_MINT, EGG_MINT } from "../consts";
+import { useWallet } from "./useWallet";
+import { useConnection } from "./useConnection";
 
 interface ITokenAccount {
   pubkey: PublicKey;
@@ -13,20 +15,18 @@ interface ITokenAccount {
 }
 
 export function useTokenAccounts() {
-  const solanaPublicKey: PublicKey | undefined = new PublicKey(
-    window.xnft.publicKeys?.solana ?? PublicKey.default.toString()
-  ); // replace with hook eventually
-  const connection: Connection | undefined = window.xnft.solana?.connection; // replace with hook eventually
+  const wallet = useWallet();
+  const connection = useConnection();
 
   const [tokenAccounts, setTokenAcccounts] = useState<{
     [key: string]: ITokenAccount[];
   }>();
 
   useEffect(() => {
-    if (solanaPublicKey && connection) {
-      getTokenAccounts(solanaPublicKey, connection);
+    if (wallet.publicKey && connection) {
+      getTokenAccounts(wallet.publicKey, connection);
     }
-  }, [solanaPublicKey, connection]);
+  }, [wallet.publicKey, connection]);
 
   const getTokenAccounts = async (
     owner: PublicKey,
@@ -37,17 +37,25 @@ export function useTokenAccounts() {
     } = {};
 
     const dinoAccounts = (
-      await _connection.getParsedTokenAccountsByOwner(owner, {
-        mint: DINO_MINT,
-      })
+      await _connection.getParsedTokenAccountsByOwner(
+        owner,
+        {
+          mint: DINO_MINT,
+        },
+        "confirmed"
+      )
     ).value;
 
     _tokenAccounts[DINO_MINT.toString()] = dinoAccounts;
 
     const eggAccounts = (
-      await _connection.getParsedTokenAccountsByOwner(owner, {
-        mint: EGG_MINT,
-      })
+      await _connection.getParsedTokenAccountsByOwner(
+        owner,
+        {
+          mint: EGG_MINT,
+        },
+        "confirmed"
+      )
     ).value;
 
     _tokenAccounts[EGG_MINT.toString()] = eggAccounts;
@@ -55,5 +63,5 @@ export function useTokenAccounts() {
     setTokenAcccounts(_tokenAccounts);
   };
 
-  return { tokenAccounts };
+  return { tokenAccounts, getTokenAccounts };
 }

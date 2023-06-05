@@ -1,4 +1,3 @@
-import { Event, XnftMetadata } from "@coral-xyz/common-public";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { useEffect, useState } from "react";
 
@@ -104,20 +103,20 @@ export function useDidLaunch() {
 
 export const useReady = useDidLaunch;
 
-export function useMetadata(): XnftMetadata | undefined {
-  const didLaunch = useDidLaunch();
-  const [metadata, setMetadata] = useState();
+// export function useMetadata(): XnftMetadata | undefined {
+//   const didLaunch = useDidLaunch();
+//   const [metadata, setMetadata] = useState();
 
-  useEffect(() => {
-    if (didLaunch) {
-      setMetadata(window.xnft.metadata);
-      window.xnft.addListener("metadata", (event: Event) => {
-        setMetadata(event.data.metadata);
-      });
-    }
-  }, [didLaunch, setMetadata]);
-  return metadata;
-}
+//   useEffect(() => {
+//     if (didLaunch) {
+//       setMetadata(window.xnft.metadata);
+//       window.xnft.addListener("metadata", (event: Event) => {
+//         setMetadata(event.data.metadata);
+//       });
+//     }
+//   }, [didLaunch, setMetadata]);
+//   return metadata;
+// }
 
 export function useDimensions(debounceMs = 0) {
   const [dimensions, setDimensions] = useState({

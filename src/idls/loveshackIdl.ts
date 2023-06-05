@@ -1,4 +1,4 @@
-import * as anchor from "@project-serum/anchor";
+import * as anchor from "@coral-xyz/anchor";
 
 export const LOVE_SHACK_IDL: anchor.Idl = {
   version: "0.0.0",

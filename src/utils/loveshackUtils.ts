@@ -1,13 +1,8 @@
-import { useCallback, useState } from "react";
-import {
-  AccountLayout,
-  MintLayout,
-  createAssociatedTokenAccountInstruction,
-} from "@solana/spl-token";
+import { createAssociatedTokenAccountInstruction } from "@solana/spl-token";
 
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
-import BN from "bn.js";
-import { Program } from "@project-serum/anchor";
+// import BN from "bn.js";
+import { Program, BN } from "@coral-xyz/anchor";
 import { DINO_MINT, EGG_MINT } from "../consts";
 
 export const SYSTEM_PROGRAM_ID = new PublicKey(
@@ -256,28 +251,26 @@ export function createStakeDinoInstruction(
   ataDino: PublicKey,
   stakeAcct: PublicKey,
   holdingAcct: PublicKey,
-  aMint: PublicKey,
   amount: number,
   decimals: number
 ) {
+  const amountBn = new BN(amount * Math.pow(10, decimals));
+
   instructions.push(
-    program.instruction.putStakeDinoForEgg(
-      new BN(amount * Math.pow(10, decimals)),
-      {
-        accounts: {
-          owner: owner,
-          aMint: DINO_MINT,
-          bMint: EGG_MINT,
-          from: ataDino,
-          stake: stakeAcct,
-          holding: holdingAcct,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          rent: RENT_PROGRAM_ID,
-          clock: CLOCK_PROGRAM_ID,
-          systemProgram: SYSTEM_PROGRAM_ID,
-        },
-      }
-    )
+    program.instruction.putStakeDinoForEgg(amountBn, {
+      accounts: {
+        owner: owner,
+        aMint: DINO_MINT,
+        bMint: EGG_MINT,
+        from: ataDino,
+        stake: stakeAcct,
+        holding: holdingAcct,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: RENT_PROGRAM_ID,
+        clock: CLOCK_PROGRAM_ID,
+        systemProgram: SYSTEM_PROGRAM_ID,
+      },
+    })
   );
   return;
 }
@@ -289,7 +282,6 @@ export function getStakeDinoInstruction(
   ata: PublicKey,
   stakeAcct: PublicKey,
   holdingAcct: PublicKey,
-  aMint: PublicKey,
   amount: number,
   decimals: number
 ) {

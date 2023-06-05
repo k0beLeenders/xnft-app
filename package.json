@@ -5,17 +5,19 @@
     "build": "expo export:web",
     "start": "yarn build && npx xnft web",
     "bundle": "yarn build && npx xnft bundle",
-    "dev": "expo start --web & npx xnft --iframe http://localhost:19006"
+    "dev": "GENERATE_SOURCEMAP=false expo start --web & npx xnft --iframe http://localhost:19006"
   },
   "dependencies": {
-    "@coral-xyz/common-public": "^0.2.0-latest.3375",
+    "@coral-xyz/anchor": "^0.27.0",
+    "@coral-xyz/common": "^0.6.6-latest.5027",
     "@expo-google-fonts/dev": "*",
     "@expo/vector-icons": "^13.0.0",
-    "@project-serum/anchor": "^0.26.0",
+    "@miblanchard/react-native-slider": "^2.3.1",
     "@react-navigation/bottom-tabs": "6.3.1",
     "@react-navigation/native": "6.0.10",
     "@react-navigation/native-stack": "6.6.1",
     "@react-navigation/stack": "6.2.1",
+    "@solana/buffer-layout": "^4.0.1",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.73.0",
     "buffer": "^6.0.3",
