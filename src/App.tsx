@@ -33,7 +33,7 @@ function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="List"
+        name="Incubator"
         component={IncubatorScreen}
         options={{
           headerShown: false,

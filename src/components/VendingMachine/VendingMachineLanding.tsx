@@ -7,11 +7,15 @@ import { usePublicKeys } from "../../hooks/xnft-hooks";
 import { useWallet } from "../../hooks/useWallet";
 import { useConnection } from "../../hooks/useConnection";
 import { useTokenAccounts } from "../../hooks/useTokenAccounts";
+import { createStackNavigator } from "@react-navigation/stack";
+import { VendingMachineMenu } from "./VendingMachineScreens/VendingMachingMenu";
+import { VendingMachineMint } from "./VendingMachineScreens/VendingMachineMint";
 
 type Props = {
   // title: string;
   children: JSX.Element | JSX.Element[] | null;
 };
+const Stack = createStackNavigator();
 
 export function VendingMachineLanding({ children }: Props) {
   const keys = usePublicKeys();
@@ -26,7 +30,16 @@ export function VendingMachineLanding({ children }: Props) {
         alt="testing"
         source={require("../../assets/vending_machine_v2.png")}
       />
-      <View style={styles.display}>Hi</View>
+      <View style={styles.display}>
+        <Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={VendingMachineMenu}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="Mint" component={VendingMachineMint} />
+        </Stack.Navigator>
+      </View>
     </View>
   );
 }
@@ -36,12 +49,11 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.85)",
   },
   display: {
-    marginHorizontal: "62px",
-    marginTop: "110px",
-    backgroundColor: "red",
-    opacity: 0.4,
-    width: "196px",
-    height: "332px",
+    marginHorizontal: "64px",
+    marginTop: "112px",
+    backgroundColor: "#32363d",
+    width: "193px",
+    height: "328px",
   },
   loveshack: {
     position: "absolute",
